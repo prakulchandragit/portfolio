@@ -1,0 +1,141 @@
+:root {
+  --bg: #05030d;
+  --fg: #f2f0ff;
+  --dim: #a99fd0;
+  --ascii: #fd400c;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+html {
+  scroll-behavior: smooth;
+}
+html,
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Arimo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+#stage {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  touch-action: none;
+}
+canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+header,
+footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding: clamp(16px, 3vw, 32px);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  pointer-events: none;
+  z-index: 2;
+}
+header {
+  top: env(safe-area-inset-top, 0px);
+}
+footer {
+  bottom: env(safe-area-inset-bottom, 0px);
+}
+h1 {
+  font-size: clamp(20px, 3.2vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+p,
+a {
+  font-size: 13px;
+  color: var(--dim);
+}
+nav {
+  display: flex;
+  gap: 20px;
+  pointer-events: auto;
+}
+nav a {
+  text-decoration: none;
+  color: var(--fg);
+}
+nav a:hover,
+nav a:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+#panels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(340px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border: 1px dashed rgba(169, 159, 208, 0.5);
+  background: rgba(5, 3, 13, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  will-change: transform, opacity;
+}
+.panel.m {
+  left: 16px;
+  right: 16px;
+  width: auto;
+  top: auto;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+.panel h2 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.panel p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--fg);
+  min-height: 3em;
+}
+.panel span {
+  font-size: 13px;
+  color: var(--dim);
+}
+.panel [contenteditable] {
+  outline: none;
+  min-height: 1.2em;
+  overflow-wrap: anywhere;
+}
+.panel [contenteditable]:empty:before {
+  content: attr(data-ph);
+  color: var(--dim);
+  opacity: 0.7;
+}
+.panel [contenteditable]:focus-visible {
+  outline: 1px solid var(--dim);
+  outline-offset: 3px;
+}
+#stage:focus-visible {
+  outline: 2px solid var(--dim);
+  outline-offset: -4px;
+}

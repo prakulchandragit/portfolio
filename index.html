@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Prakul Chandra</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/sections.css" />
+    <link rel="stylesheet" href="css/about.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="work">
+      <div
+        id="stage"
+        role="application"
+        tabindex="0"
+        aria-label="Scroll or use arrow keys to turn it, click a shape to toggle ASCII."
+      >
+        <canvas id="bg"></canvas>
+        <canvas id="gl"></canvas>
+        <canvas id="ascii"></canvas>
+      </div>
+      <div id="panels"></div>
+      <header>
+        <h1>Prakul Chandra</h1>
+        <nav>
+          <a href="#work">Work</a><a href="#album">Album</a
+          ><a href="#blog">Blog</a><a href="#photography">Photos</a
+          ><a href="#about">About</a
+          ><a href="mailto:you@example.com">Contact</a>
+        </nav>
+      </header>
+      <footer>
+        <p id="hint">Click a shape.</p>
+        <p>Scroll or drag to turn the wheel, then keep going &darr;</p>
+      </footer>
+    </div>
+    <main>
+      <section id="album">
+        <div class="lbl">01 / Album</div>
+        <h2 class="big">Album</h2>
+        <div class="car auto" data-n="9" data-label="Album image" data-h="250">
+          <div class="track"></div>
+        </div>
+      </section>
+      <section id="blog">
+        <div class="lbl">02 / Blog</div>
+        <h2 class="big">Writing</h2>
+        <article class="post">
+          <time>29 September 2026</time>
+          <div>
+            <h3>How ASCII Donuts Really work</h3>
+            <p>Ascii donuts here we go</p>
+          </div>
+          <a href="#blog">Read &rarr;</a>
+        </article>
+        <article class="post">
+          <time>00 Month 2026</time>
+          <div>
+            <h3>Blog post title</h3>
+            <p>
+              A short excerpt placeholder. Replace this with the first line or
+              two of your post.
+            </p>
+          </div>
+          <a href="#blog">Read &rarr;</a>
+        </article>
+        <article class="post">
+          <time>00 Month 2026</time>
+          <div>
+            <h3>Blog post title</h3>
+            <p>
+              A short excerpt placeholder. Replace this with the first line or
+              two of your post.
+            </p>
+          </div>
+          <a href="#blog">Read &rarr;</a>
+        </article>
+      </section>
+      <section id="photography">
+        <div class="lbl">03 / Photography</div>
+        <h2 class="big">Photography</h2>
+        <div class="car wide" data-n="7" data-label="Photo" data-h="170">
+          <div class="track"></div>
+          <div class="ctl">
+            <button data-d="-1" aria-label="Previous">&larr; Prev</button
+            ><button data-d="1" aria-label="Next">Next &rarr;</button>
+          </div>
+        </div>
+        <div class="end">
+          <a href="mailto:you@example.com">you@example.com</a>
+          <p>&copy; 2026 Prakul Chandra</p>
+        </div>
+      </section>
+    </main>
+    <div id="about-page" aria-hidden="true">
+      <div class="bg"></div>
+      <div class="frame"></div>
+      <nav class="topnav mono">
+        <a href="#work">Home</a><a href="#about" class="on">About me</a
+        ><button id="mode" class="tgl" aria-label="Switch pattern">
+          <i></i>
+        </button>
+      </nav>
+      <div class="stage">
+        <canvas id="evac"></canvas>
+        <div id="tags"></div>
+      </div>
+      <section class="left">
+        <figure class="photo">
+          <img
+            src="images/me.jpeg"
+            alt="Portrait"
+            onerror="this.style.display = 'none'"
+          />
+        </figure>
+        <div class="meta mono">
+          <span>Section 01 / 06</span>
+          <hr />
+          <span>About</span>
+        </div>
+        <h2>
+          I am a frontend Web developer currently interested in 3D modelling and
+          WebGL intergrations
+        </h2>
+        <p>
+          This website might be the prime example of my capabilities maybee.
+        </p>
+      </section>
+      <div class="bottom">
+        <div id="tele" class="mono tele"></div>
+        <nav class="botnav mono">
+          <a href="#about" class="on">About</a><a href="#work">Work</a
+          ><a href="#album">Album</a><a href="#blog">Blog</a
+          ><a href="#photography">Photos</a
+          ><a href="mailto:you@example.com">Contact</a>
+        </nav>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/hero.js"></script>
+    <script src="js/sections.js"></script>
+    <script src="js/about.js"></script>
+  </body>
+</html>
