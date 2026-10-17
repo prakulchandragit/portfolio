@@ -4,7 +4,9 @@
     ac = document.getElementById("ascii"),
     hint = document.getElementById("hint");
   var asciiColor =
-    getComputedStyle(document.documentElement).getPropertyValue("--ascii").trim() || "#e6fbff";
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--ascii")
+      .trim() || "#e6fbff";
   var actx = ac.getContext("2d");
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -23,6 +25,7 @@
     uPinch: { value: 0 },
     uClick: { value: 99 },
     uCenter: { value: new THREE.Vector2(0, 0) },
+    uFade: { value: 0 },
   };
   bgS.add(
     new THREE.Mesh(
@@ -32,7 +35,7 @@
         vertexShader:
           "varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}",
         fragmentShader: [
-          "precision highp float;varying vec2 vUv;uniform float uTime,uAspect,uPinch,uClick;uniform vec2 uCenter;",
+          "precision highp float;varying vec2 vUv;uniform float uTime,uAspect,uPinch,uClick,uFade;uniform vec2 uCenter;",
           "float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}",
           "float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);",
           " return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}",
@@ -52,7 +55,7 @@
           " vec3 col=vec3(.006,.006,.007)+neon*(glow*1.15+.07*length(a));",
           " col+=cy*ring*.6+mag*abs(uPinch)*exp(-r2*4.)*.5;",
           " col*=1.-.09*vig;",
-          " gl_FragColor=vec4(col,1.);}",
+          " gl_FragColor=vec4(col*(1.-uFade),1.);}",
         ].join("\n"),
       }),
     ),
@@ -103,6 +106,8 @@
       mesh: mesh,
       mat: mat,
       mode: 0,
+      z: 0,
+      r0: (g.computeBoundingSphere(), g.boundingSphere.radius),
       m: 0,
       vis: true,
       sx: 0,
@@ -128,6 +133,7 @@
     cols = 0,
     rows = 0,
     ppu = 1,
+    halfWv = 1,
     xA = 0;
   var small = document.createElement("canvas"),
     sctx = small.getContext("2d", { willReadFrequently: true });
@@ -142,6 +148,7 @@
     bgU.uAspect.value = W / H;
     ppu = H / (2 * halfH);
     var halfW = (halfH * W) / H;
+    halfWv = halfW;
     xA = -halfW + Math.min(halfW * 0.65, 2.4); // where the active shape sits (left side)
     cw = W < 600 ? 7 : 9;
     ch = Math.round(cw * 1.66);
@@ -163,6 +170,8 @@
     clickT = 99,
     pinchS = 0,
     pinchIdx = -1,
+    fade = 0,
+    redirected = false,
     seed = Math.random() * 200;
   function snapSoon() {
     clearTimeout(snapT);
@@ -179,6 +188,11 @@
         document.body.classList.contains("about-open")
       )
         return;
+      if (zoomedIndex() >= 0) {
+        e.preventDefault();
+        exitZoom();
+        return;
+      }
       var dy = e.deltaY;
       if ((dy > 0 && target >= N - 1) || (dy < 0 && target <= 0)) return; // range finished: let the page scroll
       e.preventDefault();
@@ -203,6 +217,20 @@
   function wrap(d) {
     return d;
   }
+  function zoomedIndex() {
+    for (var i = 0; i < items.length; i++)
+      if (items[i].mode && items[i].z > 0.4) return i;
+    return -1;
+  }
+  function exitZoom() {
+    items.forEach(function (o) {
+      o.mode = 0;
+    });
+    updateHint();
+  }
+  window.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && zoomedIndex() >= 0) exitZoom();
+  });
   function activeIndex() {
     var b = -1,
       bd = 9;
@@ -247,6 +275,8 @@
     if (!down) return;
     if (down.moved) {
       target = Math.round(target);
+    } else if (zoomedIndex() >= 0) {
+      poke(zoomedIndex());
     } else {
       var r = stage.getBoundingClientRect();
       ndc.set(
@@ -276,6 +306,10 @@
   function poke(i) {
     var it = items[i];
     it.mode = it.mode ? 0 : 1;
+    if (it.mode)
+      items.forEach(function (o) {
+        if (o !== it) o.mode = 0;
+      });
     it.armed = false;
     clickT = 0;
     pinchIdx = i;
@@ -286,70 +320,138 @@
     hint.textContent = items.some(function (o) {
       return o.mode;
     })
-      ? "Click again, or scroll on, to go back to 3D."
+      ? "Click anywhere, or scroll, to zoom back out."
       : "Click a shape.";
   }
 
   // ---------- ASCII ----------
   var ramp = " .,:;-=+*#%@",
-    sdata = null;
+    sdata = null,
+    gt = 0,
+    fb = [];
   function hash(x, y) {
     var n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
     return n - Math.floor(n);
   }
   function drawAscii(any) {
     actx.clearRect(0, 0, W, H);
-    if (!any || !sdata) return;
+    var zz = 0;
+    items.forEach(function (it) {
+      if (it.z > zz) zz = it.z;
+    });
+    if ((!any || !sdata) && zz < 0.001) return;
     actx.font = ch - 2 + "px ui-monospace,Menlo,Consolas,monospace";
     actx.textBaseline = "top";
     actx.fillStyle = asciiColor;
-    var ox = (W - cols * cw) / 2;
+    var ox = (W - cols * cw) / 2,
+      ez = sm(0, 1, zz);
+    fb.length = 0;
     for (var y = 0; y < rows; y++) {
       for (var x = 0; x < cols; x++) {
-        var i = (y * cols + x) * 4,
-          a = sdata[i + 3] / 255;
-        if (a < 0.05) continue;
-        var lum =
-          ((0.2126 * sdata[i] + 0.7152 * sdata[i + 1] + 0.0722 * sdata[i + 2]) /
-            255) *
-          a;
-        var c =
-          ramp[
-            Math.min(
-              ramp.length - 1,
-              Math.floor(Math.pow(lum, 0.75) * ramp.length * 1.15),
-            )
-          ];
-        if (c === " ") continue;
-        var px = ox + x * cw + cw / 2,
-          py = y * ch + ch / 2,
-          m = 0;
-        for (var k = 0; k < N; k++) {
-          // which shape owns this cell?
-          var it = items[k];
-          if (it.m > 0) {
-            var dx = px - it.sx,
-              dy = py - it.sy;
-            if (dx * dx + dy * dy < it.sr * it.sr) {
-              m = it.m;
-              break;
-            }
+        var c = " ",
+          i = (y * cols + x) * 4;
+        if (any && sdata) {
+          var a = sdata[i + 3] / 255;
+          if (a >= 0.05) {
+            var lum =
+              ((0.2126 * sdata[i] +
+                0.7152 * sdata[i + 1] +
+                0.0722 * sdata[i + 2]) /
+                255) *
+              a;
+            c =
+              ramp[
+                Math.min(
+                  ramp.length - 1,
+                  Math.floor(Math.pow(lum, 0.75) * ramp.length * 1.15),
+                )
+              ];
           }
         }
-        if (m > 0 && hash(x, y) < m) actx.fillText(c, ox + x * cw, y * ch);
+        if (c !== " ") {
+          var px = ox + x * cw + cw / 2,
+            py = y * ch + ch / 2,
+            m = 0;
+          for (var k = 0; k < N; k++) {
+            // which shape owns this cell?
+            var it = items[k];
+            if (it.m > 0) {
+              var dx = px - it.sx,
+                dy = py - it.sy;
+              if (dx * dx + dy * dy < it.sr * it.sr) {
+                m = it.m;
+                break;
+              }
+            }
+          }
+          if (m > 0 && hash(x, y) < m) actx.fillText(c, ox + x * cw, y * ch);
+        } else if (ez > 0.001 && hash(x + 7, y + 3) < ez) {
+          // zoomed: flowing ASCII fills every gap so the whole screen is covered
+          var n =
+            0.5 +
+            0.25 * Math.sin(x * 0.13 + gt * 0.9) +
+            0.25 * Math.sin(y * 0.17 - gt * 1.1 + Math.sin(x * 0.07) * 3);
+          fb.push(
+            ramp[
+              Math.min(
+                ramp.length - 1,
+                Math.floor(Math.pow(0.1 + 0.4 * n, 0.75) * ramp.length * 1.15),
+              )
+            ],
+            ox + x * cw,
+            y * ch,
+          );
+        }
       }
+    }
+    if (fb.length) {
+      actx.globalAlpha = 0.55;
+      for (var j = 0; j < fb.length; j += 3)
+        actx.fillText(fb[j], fb[j + 1], fb[j + 2]);
+      actx.globalAlpha = 1;
     }
   }
 
   // ---------- Static text panels beside each shape ----------
   // Edit this list: one entry per shape, in wheel order. Set url to "" to hide the link.
+  // Optional repo: "https://github.com/you/project" is where the zoom redirects to (falls back to url).
   var PROJECTS = [
-    { title: "Project one", text: "A short description of this project.", linkText: "View project", url: "#" },
-    { title: "Project two", text: "A short description of this project.", linkText: "View project", url: "#" },
-    { title: "Project three", text: "A short description of this project.", linkText: "View project", url: "#" },
-    { title: "Project four", text: "A short description of this project.", linkText: "View project", url: "#" },
-    { title: "Project five", text: "A short description of this project.", linkText: "View project", url: "#" },
-    { title: "Project six", text: "A short description of this project.", linkText: "View project", url: "#" },
+    {
+      title: "Fieldmate",
+      text: "Plant / animal / bird identification using Open Weight AI",
+      linkText: "View project",
+      url: "https://github.com/prakulchandragit/fieldmate",
+    },
+    {
+      title: "Project two",
+      text: "A short description of this project.",
+      linkText: "View project",
+      url: "#",
+    },
+    {
+      title: "Project three",
+      text: "A short description of this project.",
+      linkText: "View project",
+      url: "#",
+    },
+    {
+      title: "Project four",
+      text: "A short description of this project.",
+      linkText: "View project",
+      url: "#",
+    },
+    {
+      title: "Project five",
+      text: "A short description of this project.",
+      linkText: "View project",
+      url: "#",
+    },
+    {
+      title: "Project six",
+      text: "A short description of this project.",
+      linkText: "View project",
+      url: "#",
+    },
   ];
   var panelsEl = document.getElementById("panels");
   var panels = items.map(function (it, i) {
@@ -372,10 +474,16 @@
     return el;
   });
   function positionPanels() {
-    var narrow = W < 720;
+    var narrow = W < 720,
+      zmax = Math.max.apply(
+        null,
+        items.map(function (o) {
+          return o.z;
+        }),
+      );
     items.forEach(function (it, i) {
       var ad = Math.abs(wrap(i - scroll)),
-        op = 1 - sm(0.25, 0.8, ad),
+        op = (1 - sm(0.25, 0.8, ad)) * (1 - sm(0, 0.6, zmax)),
         el = panels[i];
       el.style.opacity = op;
       el.style.visibility = op > 0.01 ? "visible" : "hidden";
@@ -401,6 +509,7 @@
   function tick(t) {
     var dt = Math.min((t - last) / 1000, 0.05);
     last = t;
+    gt = t * 0.001;
     scroll += (target - scroll) * Math.min(1, dt * (reduce ? 20 : 6));
 
     clickT += dt;
@@ -417,7 +526,7 @@
         ad = Math.abs(d),
         a = d * STEP;
       var s = (1.05 - 0.26 * Math.min(ad, 2.5)) * (1 - sm(2.4, 3.1, ad));
-      it.vis = s > 0.02;
+      it.vis = s > 0.02 || it.z > 0.01;
       if (it.mode) {
         if (ad < 0.2) it.armed = true;
         else if (it.armed && ad > 0.55) {
@@ -426,8 +535,18 @@
           updateHint();
         }
       }
-      it.mesh.position.set(xA - R + R * Math.cos(a), -R * Math.sin(a), 0);
-      it.sr = 1.4 * Math.max(s, 0) * ppu;
+      it.z += (it.mode - it.z) * Math.min(1, dt * (reduce ? 20 : 1.8));
+      if (Math.abs(it.mode - it.z) < 0.002) it.z = it.mode;
+      var ez = sm(0, 1, it.z),
+        fillS = Math.min((1.15 * Math.max(halfWv, halfH)) / it.r0, 8.5 / it.r0);
+      // zoom: glide to the screen centre and grow until the ASCII covers the viewport
+      it.mesh.position.set(
+        (xA - R + R * Math.cos(a)) * (1 - ez),
+        -R * Math.sin(a) * (1 - ez),
+        0,
+      );
+      it.sr = 1.4 * Math.max(s, 0) * ppu * (1 - ez) + Math.hypot(W, H) * ez;
+      s += (fillS - s) * ez;
       if (i === pinchIdx) s *= 1 - 0.18 * pinchS;
       it.mesh.scale.setScalar(Math.max(s, 0.001));
       if (!reduce) {
@@ -455,6 +574,27 @@
     bgU.uTime.value = seed + t * 0.001 * (reduce ? 0.15 : 1);
     bgU.uPinch.value = pinchS;
     bgU.uClick.value = clickT;
+    var wantFade = items.some(function (o) {
+      return o.mode && o.z > 0.15;
+    })
+      ? 1
+      : 0;
+    fade +=
+      (wantFade - fade) * Math.min(1, dt * (reduce ? 20 : wantFade ? 0.9 : 3));
+    bgU.uFade.value = fade;
+    if (!redirected && fade > 0.85) {
+      var zi = items.findIndex(function (o) {
+        return o.mode && o.z > 0.98;
+      });
+      if (zi >= 0) {
+        var P = PROJECTS[zi] || {},
+          u = P.repo || P.url;
+        if (u && u !== "#") {
+          redirected = true;
+          location.href = u;
+        }
+      }
+    }
     bgR.render(bgS, bgCam);
 
     // pass A: shapes that are (turning into) ASCII, sampled to a character grid
@@ -479,4 +619,11 @@
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) {
+      redirected = false;
+      fade = 0;
+      exitZoom();
+    }
+  });
 })();
