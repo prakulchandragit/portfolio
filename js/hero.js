@@ -610,9 +610,15 @@
       sdata = sctx.getImageData(0, 0, cols, rows).data;
     }
     // pass B: the shapes still drawn as 3D (fade out as they dissolve)
+    var zmax = 0;
+    items.forEach(function (o) {
+      zmax = Math.max(zmax, o.z);
+    });
+    var gone = sm(0, 0.5, zmax);
     items.forEach(function (it) {
-      it.mesh.visible = it.vis && it.m < 0.999;
-      it.mat.opacity = 1 - it.m * 0.92;
+      var out = it.z > 0.01 ? 0 : gone;
+      it.mesh.visible = it.vis && it.m < 0.999 && out < 0.99;
+      it.mat.opacity = (1 - it.m * 0.92) * (1 - out);
     });
     renderer.render(scene, camera);
     drawAscii(any);
