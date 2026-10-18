@@ -1,8 +1,11 @@
 (function () {
   var root = document.documentElement,
     btn = document.getElementById("theme-toggle"),
-    ring = document.getElementById("theme-ring"),
     reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var turb = document.getElementById("ca-turb"),
+    disp = document.getElementById("ca-disp"),
+    offR = document.getElementById("ca-r"),
+    offB = document.getElementById("ca-b");
   function cur() {
     return root.dataset.theme === "light" ? "light" : "dark";
   }
@@ -22,6 +25,19 @@
   function ease(t) {
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
+  // strength 0..1 drives the filter: RGB channels split apart + the whole page ripples
+  function glitch(s, t) {
+    if (!disp) return;
+    disp.setAttribute("scale", (s * 70).toFixed(1));
+    offR.setAttribute("dx", (s * 18).toFixed(1));
+    offR.setAttribute("dy", (s * 4).toFixed(1));
+    offB.setAttribute("dx", (-s * 18).toFixed(1));
+    offB.setAttribute("dy", (-s * 4).toFixed(1));
+    turb.setAttribute(
+      "baseFrequency",
+      (0.003 + 0.0012 * Math.sin(t * 9)).toFixed(5) + " " + (0.01 + 0.004 * Math.cos(t * 7)).toFixed(5),
+    );
+  }
   btn.addEventListener("click", function () {
     var next = cur() === "light" ? "dark" : "light";
     if (!document.startViewTransition || reduce) {
@@ -35,28 +51,36 @@
     root.style.setProperty("--tx", x + "px");
     root.style.setProperty("--ty", y + "px");
     root.style.setProperty("--r", "0px");
-    root.style.setProperty("--ca", "0px");
     var vt = document.startViewTransition(function () {
       apply(next);
     });
     vt.ready
       .then(function () {
         var t0 = performance.now(),
-          D = 1100;
+          D = 1200;
         (function step(now) {
           var t = Math.min(1, (now - t0) / D);
           root.style.setProperty("--r", ease(t) * R + "px");
-          // the fringe widens when the edge moves fastest, like real lens dispersion
-          root.style.setProperty("--ca", 6 + 34 * Math.sin(Math.PI * t) + "px");
-          ring.style.opacity = Math.min(1, t * 8) * (1 - Math.max(0, (t - 0.78) / 0.22));
+          glitch(Math.sin(Math.PI * t), t); // peaks mid-transition, calms at the ends
           if (t < 1) requestAnimationFrame(step);
         })(performance.now());
       })
       .catch(function () {});
     vt.finished.finally(function () {
-      ring.style.opacity = "0";
+      glitch(0, 0);
       root.style.removeProperty("--r");
-      root.style.removeProperty("--ca");
+    });
+  });
+  // nav glow: the lit edge follows the cursor inside each box
+  document.querySelectorAll("header .brand, header nav.links, header .tools").forEach(function (el) {
+    el.addEventListener("pointermove", function (e) {
+      var r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", e.clientX - r.left + "px");
+      el.style.setProperty("--my", e.clientY - r.top + "px");
+    });
+    el.addEventListener("pointerleave", function () {
+      el.style.removeProperty("--mx");
+      el.style.removeProperty("--my");
     });
   });
   label();
