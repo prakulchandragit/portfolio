@@ -4,9 +4,7 @@
     ac = document.getElementById("ascii"),
     hint = document.getElementById("hint");
   var asciiColor =
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--ascii")
-      .trim() || "#e6fbff";
+    getComputedStyle(document.documentElement).getPropertyValue("--ascii").trim() || "#e6fbff";
   var actx = ac.getContext("2d");
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -26,6 +24,7 @@
     uClick: { value: 99 },
     uCenter: { value: new THREE.Vector2(0, 0) },
     uFade: { value: 0 },
+    uTheme: { value: 0 },
   };
   bgS.add(
     new THREE.Mesh(
@@ -35,7 +34,7 @@
         vertexShader:
           "varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}",
         fragmentShader: [
-          "precision highp float;varying vec2 vUv;uniform float uTime,uAspect,uPinch,uClick,uFade;uniform vec2 uCenter;",
+          "precision highp float;varying vec2 vUv;uniform float uTime,uAspect,uPinch,uClick,uFade,uTheme;uniform vec2 uCenter;",
           "float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}",
           "float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);",
           " return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}",
@@ -52,7 +51,10 @@
           " float glow=pow(1.-abs(f-.5)*2.,7.);",
           " vec3 mag=vec3(1.,.1,.7),cy=vec3(.05,.9,1.),vio=vec3(.45,.15,1.);",
           " vec3 neon=mix(mix(mag,vio,smoothstep(.2,.5,f)),cy,smoothstep(.5,.8,f));",
-          " vec3 col=vec3(.006,.006,.007)+neon*(glow*1.15+.07*length(a));",
+          " float e=clamp(glow*1.15+.07*length(a),0.,1.);",
+          " vec3 dk=vec3(.006,.006,.007)+neon*(glow*1.15+.07*length(a));",
+          " vec3 lt=mix(vec3(.95,.94,.99),neon*.82+.12,e*.7);",
+          " vec3 col=mix(dk,lt,uTheme);",
           " col+=cy*ring*.6+mag*abs(uPinch)*exp(-r2*4.)*.5;",
           " col*=1.-.09*vig;",
           " gl_FragColor=vec4(col*(1.-uFade),1.);}",
@@ -406,8 +408,7 @@
     }
     if (fb.length) {
       actx.globalAlpha = 0.55;
-      for (var j = 0; j < fb.length; j += 3)
-        actx.fillText(fb[j], fb[j + 1], fb[j + 2]);
+      for (var j = 0; j < fb.length; j += 3) actx.fillText(fb[j], fb[j + 1], fb[j + 2]);
       actx.globalAlpha = 1;
     }
   }
@@ -416,42 +417,12 @@
   // Edit this list: one entry per shape, in wheel order. Set url to "" to hide the link.
   // Optional repo: "https://github.com/you/project" is where the zoom redirects to (falls back to url).
   var PROJECTS = [
-    {
-      title: "Fieldmate",
-      text: "Plant / animal / bird identification using Open Weight AI",
-      linkText: "View project",
-      url: "https://github.com/prakulchandragit/fieldmate",
-    },
-    {
-      title: "Project two",
-      text: "A short description of this project.",
-      linkText: "View project",
-      url: "#",
-    },
-    {
-      title: "Project three",
-      text: "A short description of this project.",
-      linkText: "View project",
-      url: "#",
-    },
-    {
-      title: "Project four",
-      text: "A short description of this project.",
-      linkText: "View project",
-      url: "#",
-    },
-    {
-      title: "Project five",
-      text: "A short description of this project.",
-      linkText: "View project",
-      url: "#",
-    },
-    {
-      title: "Project six",
-      text: "A short description of this project.",
-      linkText: "View project",
-      url: "#",
-    },
+    { title: "Project one", text: "A short description of this project.", linkText: "View project", url: "#" },
+    { title: "Project two", text: "A short description of this project.", linkText: "View project", url: "#" },
+    { title: "Project three", text: "A short description of this project.", linkText: "View project", url: "#" },
+    { title: "Project four", text: "A short description of this project.", linkText: "View project", url: "#" },
+    { title: "Project five", text: "A short description of this project.", linkText: "View project", url: "#" },
+    { title: "Project six", text: "A short description of this project.", linkText: "View project", url: "#" },
   ];
   var panelsEl = document.getElementById("panels");
   var panels = items.map(function (it, i) {
@@ -579,8 +550,7 @@
     })
       ? 1
       : 0;
-    fade +=
-      (wantFade - fade) * Math.min(1, dt * (reduce ? 20 : wantFade ? 0.9 : 3));
+    fade += (wantFade - fade) * Math.min(1, dt * (reduce ? 20 : wantFade ? 0.9 : 3));
     bgU.uFade.value = fade;
     if (!redirected && fade > 0.85) {
       var zi = items.findIndex(function (o) {
@@ -610,13 +580,14 @@
       sdata = sctx.getImageData(0, 0, cols, rows).data;
     }
     // pass B: the shapes still drawn as 3D (fade out as they dissolve)
+    // the other shapes fade away completely as the zoomed one takes over the screen
     var zmax = 0;
     items.forEach(function (o) {
       zmax = Math.max(zmax, o.z);
     });
     var gone = sm(0, 0.5, zmax);
     items.forEach(function (it) {
-      var out = it.z > 0.01 ? 0 : gone;
+      var out = it.z > 0.01 ? 0 : gone; // the zoomed shape itself is not faded
       it.mesh.visible = it.vis && it.m < 0.999 && out < 0.99;
       it.mat.opacity = (1 - it.m * 0.92) * (1 - out);
     });
@@ -625,6 +596,13 @@
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
+  // called by theme.js: switches the liquid shader + ASCII colour instantly
+  window.__heroTheme = function (mode) {
+    bgU.uTheme.value = mode === "light" ? 1 : 0;
+    asciiColor =
+      getComputedStyle(document.documentElement).getPropertyValue("--ascii").trim() || "#e6fbff";
+  };
+  window.__heroTheme(document.documentElement.dataset.theme);
   window.addEventListener("pageshow", function (e) {
     if (e.persisted) {
       redirected = false;
