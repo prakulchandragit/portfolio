@@ -1,0 +1,201 @@
+/* ---------- Intro loader: ASCII donut + counter + split-screen reveal ---------- */
+html.loading,
+html.loading body {
+  overflow: hidden;
+}
+html.no-intro #loader {
+  display: none;
+}
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  color: #f2f0ff;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  touch-action: none;
+  user-select: none;
+}
+.ld-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50.2%;
+  background: #05030d;
+  transition: transform 1.05s cubic-bezier(0.76, 0, 0.24, 1);
+  will-change: transform;
+}
+.ld-half::after {
+  /* faint scanlines */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+}
+.ld-top {
+  top: 0;
+}
+.ld-bot {
+  bottom: 0;
+}
+.ld-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: #fd400c;
+  box-shadow: 0 0 18px 2px rgba(253, 64, 12, 0.75);
+  transform: scaleX(0);
+  transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1) 0.4s, opacity 0.3s;
+}
+.ld-ui {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) clamp(16px, 3vw, 32px) calc(20px + env(safe-area-inset-bottom, 0px));
+  background: radial-gradient(circle at 50% 50%, rgba(253, 64, 12, 0.13), transparent 55%);
+}
+.ld-corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(242, 240, 255, 0.6);
+  transition: opacity 0.4s;
+}
+.ld-tl {
+  top: calc(22px + env(safe-area-inset-top, 0px));
+  left: clamp(16px, 3vw, 32px);
+}
+.ld-tr {
+  top: calc(22px + env(safe-area-inset-top, 0px));
+  right: clamp(16px, 3vw, 32px);
+  text-align: right;
+}
+.ld-bl {
+  bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+  left: clamp(16px, 3vw, 32px);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: #fd400c;
+}
+#ld-donut {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: clamp(6px, 1.25vw, 13px);
+  line-height: 1.2;
+  color: #fd400c;
+  text-shadow: 0 0 12px rgba(253, 64, 12, 0.55);
+  white-space: pre;
+  transform-origin: 50% 50%;
+  transition: transform 1.1s cubic-bezier(0.7, 0, 0.2, 1), opacity 0.7s 0.35s;
+}
+.ld-count {
+  position: absolute;
+  right: clamp(16px, 3vw, 32px);
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: flex-start;
+  line-height: 0.85;
+  font-size: clamp(64px, 15vw, 220px);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: -2px 0 rgba(255, 30, 80, 0.55), 2px 0 rgba(0, 220, 255, 0.55); /* constant chromatic split */
+  transition: opacity 0.4s;
+}
+.ld-count i {
+  font-style: normal;
+  font-size: 0.22em;
+  letter-spacing: 0;
+  margin: 0.25em 0 0 0.2em;
+  color: #fd400c;
+}
+
+/* ----- exit: donut zooms through the screen, a red line draws, the halves split ----- */
+#loader.is-exit #ld-donut {
+  transform: scale(14);
+  opacity: 0;
+  animation: ldGlitch 0.5s steps(1) 1;
+}
+#loader.is-exit .ld-count,
+#loader.is-exit .ld-corner {
+  opacity: 0;
+}
+#loader.is-exit .ld-line {
+  transform: scaleX(1);
+}
+#loader.is-split .ld-top {
+  transform: translateY(-101%);
+}
+#loader.is-split .ld-bot {
+  transform: translateY(101%);
+}
+#loader.is-split .ld-line {
+  opacity: 0;
+}
+#loader.is-split .ld-ui {
+  display: none;
+}
+@keyframes ldGlitch {
+  0% { text-shadow: -8px 0 #ff1744, 8px 0 #00e5ff; }
+  25% { text-shadow: 6px 3px #ff1744, -6px -3px #00e5ff; }
+  50% { text-shadow: -10px -2px #ff1744, 10px 2px #00e5ff; }
+  75% { text-shadow: 4px 0 #ff1744, -4px 0 #00e5ff; }
+  100% { text-shadow: 0 0 12px rgba(253, 64, 12, 0.55); }
+}
+
+/* ----- the site itself arrives after the reveal ----- */
+body:not(.loaded) header > * {
+  opacity: 0;
+}
+body.loaded header > * {
+  animation: ldDrop 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+body.loaded header > *:nth-child(2) {
+  animation-delay: 0.08s;
+}
+body.loaded header > *:nth-child(3) {
+  animation-delay: 0.16s;
+}
+body.loaded #gl {
+  animation: ldRise 1.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s backwards;
+}
+body.loaded footer {
+  animation: ldFade 1s 0.7s backwards;
+}
+@keyframes ldDrop {
+  from { opacity: 0; transform: translateY(-26px); }
+}
+@keyframes ldRise {
+  from { opacity: 0; transform: scale(1.18); }
+}
+@keyframes ldFade {
+  from { opacity: 0; }
+}
+
+@media (max-width: 720px) {
+  #ld-donut {
+    font-size: min(2.6vw, 12px);
+  }
+  .ld-corner {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ld-half,
+  #ld-donut,
+  .ld-line {
+    transition-duration: 0.01s !important;
+    animation: none !important;
+  }
+  body.loaded header > *,
+  body.loaded #gl,
+  body.loaded footer {
+    animation: none;
+  }
+}

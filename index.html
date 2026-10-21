@@ -4,6 +4,26 @@
     <meta charset="utf-8" />
     <script>
       try {
+        if (sessionStorage.getItem("intro"))
+          document.documentElement.classList.add("no-intro");
+      } catch (e) {}
+      setTimeout(function () {
+        if (document.body) document.body.classList.add("loaded");
+      }, 14000);
+    </script>
+    <link rel="stylesheet" href="css/loader.css" />
+    <noscript
+      ><style>
+        #loader {
+          display: none;
+        }
+        body:not(.loaded) header > * {
+          opacity: 1;
+        }
+      </style></noscript
+    >
+    <script>
+      try {
         var t = localStorage.getItem("theme");
         if (t) document.documentElement.dataset.theme = t;
       } catch (e) {}
@@ -26,6 +46,25 @@
     />
   </head>
   <body>
+    <div id="loader" aria-hidden="true">
+      <div class="ld-half ld-top"></div>
+      <div class="ld-half ld-bot"></div>
+      <div class="ld-ui">
+        <div class="ld-corner ld-tl">
+          <span>Prakul Chandra</span><span>Creative Developer</span>
+        </div>
+        <div class="ld-corner ld-tr">
+          <span id="ld-status">Loading assets</span><span>2026 &copy;</span>
+        </div>
+        <pre id="ld-donut"></pre>
+        <div class="ld-corner ld-bl">
+          <span id="ld-decode">PRAKUL CHANDRA</span>
+        </div>
+        <div class="ld-count"><span id="ld-num">000</span><i>%</i></div>
+      </div>
+      <div class="ld-line"></div>
+    </div>
+    <script src="js/loader.js"></script>
     <div id="work">
       <div
         id="stage"
@@ -41,12 +80,12 @@
       <header>
         <h1 class="brand">Prakul Chandra</h1>
         <nav class="links" aria-label="Primary">
-          <a href="#work">WORK</a>
-          <a href="#album">ALBUM</a>
-          <a href="#blog">BLOG</a>
-          <a href="#photography">PHOTOS</a>
-          <a href="#about">ABOUT</a>
-          <a href="mailto:you@example.com">CONTACT</a>
+          <a href="#work">Work</a>
+          <a href="#album">Album</a>
+          <a href="#blog">Blog</a>
+          <a href="#photography">Photos</a>
+          <a href="#about">About</a>
+          <a href="mailto:you@example.com">Contact</a>
         </nav>
         <div class="tools">
           <button

@@ -330,3 +330,32 @@ header nav.links a:focus-visible {
     transform: translateY(-100%);
   }
 }
+header .brand,
+header nav.links a {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+header .brand {
+  font-size: 13px;
+  font-weight: 500;
+}
+header nav.links a {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dim);
+}
+header nav.links a:hover,
+header nav.links a:focus-visible {
+  color: var(--fg);
+}
+@media (max-width: 720px) {
+  header nav.links a {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+  }
+  header .brand {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+  }
+}
