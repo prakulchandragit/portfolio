@@ -3,7 +3,8 @@
   inset: 0;
   z-index: 20;
   display: none;
-  overflow: auto;
+  overflow: hidden; /* no scrolling on the About page */
+  overscroll-behavior: none;
   background: #070a1f;
   --lime: #c6ff1a;
 }
@@ -278,4 +279,10 @@ body.about-open {
     filter: brightness(1);
     text-shadow: 0 0 0 rgba(198, 255, 26, 0);
   }
+}
+
+/* About page: hide the light/dark switch (and its glass box in the header) */
+body.about-open header .tools,
+body.about-open .theme-btn {
+  display: none;
 }

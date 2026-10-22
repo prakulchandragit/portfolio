@@ -84,7 +84,7 @@
   });
   // nav glow: the lit edge follows the cursor inside each box
   document
-    .querySelectorAll("header .brand, header nav.links, header .tools")
+    .querySelectorAll("header .brand, header nav.links, header .tools, .site-foot")
     .forEach(function (el) {
       el.addEventListener("pointermove", function (e) {
         var r = el.getBoundingClientRect();

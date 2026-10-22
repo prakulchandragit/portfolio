@@ -4,8 +4,8 @@
     ld = document.getElementById("loader"),
     body = document.body;
   if (!ld) return;
-  var ONCE_PER_SESSION = true; // set false to show the intro on every visit
-  if (ONCE_PER_SESSION && root.classList.contains("no-intro")) {
+  // (whether the intro is skipped is decided by INTRO_EVERY_VISIT in the <head> script of index.html)
+  if (root.classList.contains("no-intro")) {
     ld.remove();
     body.classList.add("loaded");
     return;

@@ -359,3 +359,62 @@ header nav.links a:focus-visible {
     letter-spacing: 0.14em;
   }
 }
+
+/* ---------- Footer: same glass + glowing edge as the nav boxes ---------- */
+.site-foot {
+  background: rgba(26, 26, 26, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  transition:
+    box-shadow 0.35s,
+    border-color 0.35s;
+}
+.site-foot::before {
+  display: none; /* drop the old white highlight */
+}
+.site-foot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s;
+  background: radial-gradient(
+    190px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(176, 120, 255, 1),
+    rgba(90, 140, 255, 0.55) 40%,
+    transparent 72%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+.site-foot:hover::after,
+.site-foot:focus-within::after {
+  opacity: 1;
+}
+.site-foot:hover {
+  border-color: rgba(176, 120, 255, 0.35);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.25),
+    0 0 26px rgba(150, 90, 255, 0.3),
+    inset 0 0 20px rgba(150, 90, 255, 0.08);
+}
+:root[data-theme="light"] .site-foot {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(20, 17, 43, 0.12);
+  box-shadow: 0 10px 30px rgba(60, 40, 140, 0.12);
+}
+:root[data-theme="light"] .site-foot:hover {
+  box-shadow:
+    0 10px 30px rgba(60, 40, 140, 0.12),
+    0 0 22px rgba(130, 80, 255, 0.28);
+}

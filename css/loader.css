@@ -7,10 +7,17 @@ html.no-intro #loader {
   display: none;
 }
 #loader {
+  /* Same tokens as the site (base.css / theme.css), so the intro follows dark + light mode */
+  --ld-bg: var(--bg, #05030d);
+  --ld-fg: var(--fg, #f2f0ff);
+  --ld-dim: var(--dim, #a99fd0);
+  --ld-accent: var(--ascii, #fd400c);
+  --ld-violet: 176, 120, 255; /* nav-glow purple */
+  --ld-blue: 90, 140, 255;
   position: fixed;
   inset: 0;
   z-index: 10000;
-  color: #f2f0ff;
+  color: var(--ld-fg);
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   touch-action: none;
   user-select: none;
@@ -20,7 +27,7 @@ html.no-intro #loader {
   left: 0;
   right: 0;
   height: 50.2%;
-  background: #05030d;
+  background: var(--ld-bg);
   transition: transform 1.05s cubic-bezier(0.76, 0, 0.24, 1);
   will-change: transform;
 }
@@ -29,7 +36,11 @@ html.no-intro #loader {
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(127, 120, 170, 0.07) 0 1px,
+    transparent 1px 3px
+  );
 }
 .ld-top {
   top: 0;
@@ -44,18 +55,25 @@ html.no-intro #loader {
   top: 50%;
   height: 2px;
   margin-top: -1px;
-  background: #fd400c;
-  box-shadow: 0 0 18px 2px rgba(253, 64, 12, 0.75);
+  background: var(--ld-accent);
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--ld-accent) 75%, transparent);
   transform: scaleX(0);
-  transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1) 0.4s, opacity 0.3s;
+  transition:
+    transform 0.55s cubic-bezier(0.7, 0, 0.2, 1) 0.4s,
+    opacity 0.3s;
 }
 .ld-ui {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: calc(20px + env(safe-area-inset-top, 0px)) clamp(16px, 3vw, 32px) calc(20px + env(safe-area-inset-bottom, 0px));
-  background: radial-gradient(circle at 50% 50%, rgba(253, 64, 12, 0.13), transparent 55%);
+  padding: calc(20px + env(safe-area-inset-top, 0px)) clamp(16px, 3vw, 32px)
+    calc(20px + env(safe-area-inset-bottom, 0px));
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in srgb, var(--ld-accent) 13%, transparent),
+    transparent 55%
+  );
 }
 .ld-corner {
   position: absolute;
@@ -65,7 +83,7 @@ html.no-intro #loader {
   font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(242, 240, 255, 0.6);
+  color: var(--ld-dim);
   transition: opacity 0.4s;
 }
 .ld-tl {
@@ -81,18 +99,20 @@ html.no-intro #loader {
   bottom: calc(26px + env(safe-area-inset-bottom, 0px));
   left: clamp(16px, 3vw, 32px);
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  color: #fd400c;
+  color: var(--ld-accent);
 }
 #ld-donut {
   margin: 0;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: clamp(6px, 1.25vw, 13px);
   line-height: 1.2;
-  color: #fd400c;
-  text-shadow: 0 0 12px rgba(253, 64, 12, 0.55);
+  color: var(--ld-accent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--ld-accent) 55%, transparent);
   white-space: pre;
   transform-origin: 50% 50%;
-  transition: transform 1.1s cubic-bezier(0.7, 0, 0.2, 1), opacity 0.7s 0.35s;
+  transition:
+    transform 1.1s cubic-bezier(0.7, 0, 0.2, 1),
+    opacity 0.7s 0.35s;
 }
 .ld-count {
   position: absolute;
@@ -101,11 +121,13 @@ html.no-intro #loader {
   display: flex;
   align-items: flex-start;
   line-height: 0.85;
-  font-size: clamp(64px, 15vw, 220px);
+  font-size: clamp(40px, 7vw, 104px);
   font-weight: 500;
   letter-spacing: -0.05em;
   font-variant-numeric: tabular-nums;
-  text-shadow: -2px 0 rgba(255, 30, 80, 0.55), 2px 0 rgba(0, 220, 255, 0.55); /* constant chromatic split */
+  text-shadow:
+    -2px 0 rgba(var(--ld-violet), 0.55),
+    2px 0 rgba(var(--ld-blue), 0.55); /* subtle split in the nav-glow purple/blue */
   transition: opacity 0.4s;
 }
 .ld-count i {
@@ -113,7 +135,7 @@ html.no-intro #loader {
   font-size: 0.22em;
   letter-spacing: 0;
   margin: 0.25em 0 0 0.2em;
-  color: #fd400c;
+  color: var(--ld-accent);
 }
 
 /* ----- exit: donut zooms through the screen, a red line draws, the halves split ----- */
@@ -142,11 +164,29 @@ html.no-intro #loader {
   display: none;
 }
 @keyframes ldGlitch {
-  0% { text-shadow: -8px 0 #ff1744, 8px 0 #00e5ff; }
-  25% { text-shadow: 6px 3px #ff1744, -6px -3px #00e5ff; }
-  50% { text-shadow: -10px -2px #ff1744, 10px 2px #00e5ff; }
-  75% { text-shadow: 4px 0 #ff1744, -4px 0 #00e5ff; }
-  100% { text-shadow: 0 0 12px rgba(253, 64, 12, 0.55); }
+  0% {
+    text-shadow:
+      -8px 0 rgb(176, 120, 255),
+      8px 0 rgb(90, 140, 255);
+  }
+  25% {
+    text-shadow:
+      6px 3px rgb(176, 120, 255),
+      -6px -3px rgb(90, 140, 255);
+  }
+  50% {
+    text-shadow:
+      -10px -2px rgb(176, 120, 255),
+      10px 2px rgb(90, 140, 255);
+  }
+  75% {
+    text-shadow:
+      4px 0 rgb(176, 120, 255),
+      -4px 0 rgb(90, 140, 255);
+  }
+  100% {
+    text-shadow: 0 0 12px color-mix(in srgb, var(--ld-accent) 55%, transparent);
+  }
 }
 
 /* ----- the site itself arrives after the reveal ----- */
@@ -169,13 +209,21 @@ body.loaded footer {
   animation: ldFade 1s 0.7s backwards;
 }
 @keyframes ldDrop {
-  from { opacity: 0; transform: translateY(-26px); }
+  from {
+    opacity: 0;
+    transform: translateY(-26px);
+  }
 }
 @keyframes ldRise {
-  from { opacity: 0; transform: scale(1.18); }
+  from {
+    opacity: 0;
+    transform: scale(1.18);
+  }
 }
 @keyframes ldFade {
-  from { opacity: 0; }
+  from {
+    opacity: 0;
+  }
 }
 
 @media (max-width: 720px) {
